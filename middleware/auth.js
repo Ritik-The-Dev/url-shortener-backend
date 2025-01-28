@@ -23,7 +23,7 @@ const authMiddleware = async (req, res, next) => {
       res.status(401).json({ message: "Not Authorized" });
     }
   } catch (err) {
-    res.status(401).json({ message: "Not Authorized" });
+    res.status(401).json({ message: "Not Authorized",error:err });
   }
 };
 
