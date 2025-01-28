@@ -20,7 +20,7 @@ const authMiddleware = async (req, res, next) => {
         res.status(401).json({ message: "Invalid or expired token", error });
       }
     } else {
-      res.status(401).json({ message: "Not Authorized" });
+      res.status(401).json({ message: "Not Authorized" ,error:"No Token",req});
     }
   } catch (err) {
     res.status(401).json({ message: "Not Authorized",error:err });
