@@ -278,7 +278,12 @@
       const formattedDateWiseClicks = cumulativeDateWiseClicks.map((item) => ({
         name: item.date,
         count: item.clicks,
-      })).sort((a, b) => new Date(b.name) - new Date(a.name));
+        originalDate: new Date(
+          `20${item.date.split("-")[2]}`,
+          item.date.split("-")[1] - 1,
+          item.date.split("-")[0]
+        ),
+      })).sort((a, b) => b.originalDate - a.originalDate);
 
       res.status(200).json({
         success: true,
