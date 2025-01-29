@@ -4,7 +4,6 @@
   import User from "../modals/User.js";
   import UserLinks from "../modals/Links.js";
   import useragent from "express-useragent";
-  import moment from 'moment-timezone';
   import requestIp from "request-ip";
 
   const GetLink = async (query, skip, limit) => {
@@ -16,10 +15,6 @@
     const count = await UserLinks.find(query).countDocuments();
   
     const linksData = allLinks.map((link) => {
-      const formattedDate = moment(link.createdAt)
-        .tz('Asia/Kolkata')
-        .format('MMM DD, YYYY hh:mm A');
-  
       const status = link.expirationEnabled
         ? link.expirationDate > new Date()
           ? "Active"
@@ -28,7 +23,7 @@
   
       return {
         _id: link._id,
-        date: formattedDate,
+        date: link.createdAt,
         expirationEnabled: link.expirationEnabled,
         destinationUrl: link.destinationUrl,
         shortLink: link.shortLink,
@@ -500,21 +495,15 @@
       const logsData = allLinks.flatMap((link) =>
         (link.logs || []).map((log) => {
           const dateKey = new Date(log.timeStamp);
-  
-          const formattedDate = moment(log.timeStamp)
-          .tz('Asia/Kolkata')
-          .format('MMM DD, YYYY hh:mm A');
-  
           return {
-            ogDate:dateKey,
-            date: formattedDate,
+            date: dateKey,
             destinationUrl: link.destinationUrl,
             shortLink: link.shortLink,
             ipAddress: log.ipAddress,
             userDevice: log.userDevice,
           };
         })
-      ).sort((a, b) => b.ogDate - a.ogDate);;
+      ).sort((a, b) => b.date - a.date);;
   
       const count = logsData.length;
       
