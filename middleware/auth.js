@@ -18,14 +18,14 @@ const authMiddleware = async (req, res, next) => {
         req.user = user;
         next();
       } catch (error) {
-        res.status(401).json({ msg: "Invalid or expired token", error });
+        res.status(401).json({ message: "Invalid or expired token", error });
       }
     }
     if (!token) {
-      res.status(401).json({ msg: "Not Authorized" });
+      res.status(401).json({ message: "Not Authorized" });
     }
   } catch (err) {
-    res.status(401).json({ msg: "Not Authorized" });
+    res.status(401).json({ message: "Not Authorized" });
   }
 };
 
