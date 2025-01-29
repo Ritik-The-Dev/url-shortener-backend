@@ -4,33 +4,27 @@
   import User from "../modals/User.js";
   import UserLinks from "../modals/Links.js";
   import useragent from "express-useragent";
-  import requestIp from "request-ip";
+  import moment from 'moment-timezone';
 
   const GetLink = async (query, skip, limit) => {
-    const allLinks = await UserLinks.find(query).skip(skip).limit(limit).sort({
-      createdAt: -1
-    });
-
+    const allLinks = await UserLinks.find(query)
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+  
     const count = await UserLinks.find(query).countDocuments();
-
+  
     const linksData = allLinks.map((link) => {
-      const dateKey = new Date(link.createdAt);
-
-      const formattedDate = dateKey.toLocaleString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: true,
-      });
-
+      const formattedDate = moment(link.createdAt)
+        .tz('Asia/Kolkata')
+        .format('MMM DD, YYYY hh:mm A');
+  
       const status = link.expirationEnabled
         ? link.expirationDate > new Date()
           ? "Active"
           : "Inactive"
         : "Active";
-
+  
       return {
         _id: link._id,
         date: formattedDate,
@@ -42,7 +36,7 @@
         status,
       };
     });
-
+  
     return { linksData, count };
   };
 
@@ -506,14 +500,9 @@
         (link.logs || []).map((log) => {
           const dateKey = new Date(log.timeStamp);
   
-          const formattedDate = dateKey.toLocaleString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true,
-          });
+          const formattedDate = moment(log.timeStamp)
+          .tz('Asia/Kolkata')
+          .format('MMM DD, YYYY hh:mm A');
   
           return {
             ogDate:dateKey,
