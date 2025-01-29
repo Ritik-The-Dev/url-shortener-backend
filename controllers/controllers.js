@@ -74,14 +74,8 @@
         { expiresIn: "30d" }
       );
 
-      res.cookie("token", token, {
-        httpOnly: true,
-        maxAge: 30 * 24 * 60 * 60 * 1000,
-        sameSite: "lax",
-        secure:true
-      });
-
       res.status(200).json({
+        token,
         success: true,
         message: "Login successful",
       });

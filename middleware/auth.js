@@ -4,26 +4,28 @@ import User from "../modals/User.js";
 const authMiddleware = async (req, res, next) => {
   try {
     let token;
-    if (req.cookies && req.cookies.token) {
-      token = req.cookies.token;
-    }
-    if (token) {
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith("Bearer")
+    ) {
       try {
+        token = req.headers.authorization.split(" ")[1];
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        const user  = await User.findById(decoded.id);
+        const user = await User.findById(decoded.id);
         if(!user){
-          res.status(404).json({ message: "Invalid token", error });
+          return res.status(401).json({message: "Invalid token, please login again."})
         }
-        req.user = user
+        req.user = user;
         next();
       } catch (error) {
-        res.status(401).json({ message: "Invalid or expired token", error });
+        res.status(401).json({ msg: "Invalid or expired token", error });
       }
-    } else {
-      res.status(401).json({ message: "Not Authorized" ,error:"No Token",cookies:req.cookies});
     }
-  } catch (error) {
-    res.status(401).json({ message: "Not Authorized",error:error.message });
+    if (!token) {
+      res.status(401).json({ msg: "Not Authorized" });
+    }
+  } catch (err) {
+    res.status(401).json({ msg: "Not Authorized" });
   }
 };
 

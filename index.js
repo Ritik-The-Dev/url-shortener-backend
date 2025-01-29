@@ -4,28 +4,18 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/connectDb.js";
 import router from "./routes/route.js";
 import { redirectUrl } from "./controllers/controllers.js";
-import cookieParser from "cookie-parser";
-import useragent from 'express-useragent';
-import requestIp from 'request-ip';
+import useragent from "express-useragent";
+import requestIp from "request-ip";
 
 dotenv.config();
 connectDB();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: ["https://url-shoretner.vercel.app","http://localhost:5173"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    domain: 'url-shoretner.vercel.app'
-  })
-);
+app.use(cors());
 
 app.use(useragent.express());
 app.use(requestIp.mw());
-app.use(cookieParser());
 
 app.use(express.json({ limit: "30mb" }));
 app.use(express.urlencoded({ limit: "30mb", extended: true }));
