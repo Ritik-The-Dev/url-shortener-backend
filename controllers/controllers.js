@@ -7,7 +7,9 @@
   import requestIp from "request-ip";
 
   const GetLink = async (query, skip, limit) => {
-    const allLinks = await UserLinks.find(query).skip(skip).limit(limit);
+    const allLinks = await UserLinks.find(query).skip(skip).limit(limit).sort({
+      createdAt: -1
+    });
 
     const count = await UserLinks.find(query).countDocuments();
 
@@ -264,7 +266,7 @@
           name: device,
           count: clickedDevices[device],
         })
-      );
+      ).sort((a, b) => b.count - a.count);
 
       const sortedDates = Object.keys(dateWiseClicks).sort();
       let cumulativeClicks = 0;
@@ -276,7 +278,7 @@
       const formattedDateWiseClicks = cumulativeDateWiseClicks.map((item) => ({
         name: item.date,
         count: item.clicks,
-      }));
+      })).sort((a, b) => new Date(b.name) - new Date(a.name));
 
       res.status(200).json({
         success: true,
@@ -509,6 +511,7 @@
           });
   
           return {
+            ogDate:dateKey,
             date: formattedDate,
             destinationUrl: link.destinationUrl,
             shortLink: link.shortLink,
@@ -516,10 +519,10 @@
             userDevice: log.userDevice,
           };
         })
-      );
+      ).sort((a, b) => b.ogDate - a.ogDate);;
   
       const count = logsData.length;
-  
+      
       const paginatedData = logsData.slice(skip, skip + Number(limit));
   
       res.status(200).json({
