@@ -6,7 +6,7 @@
   import useragent from "express-useragent";
   import moment from 'moment-timezone';
   import requestIp from "request-ip";
-  
+
   const GetLink = async (query, skip, limit) => {
     const allLinks = await UserLinks.find(query)
       .skip(skip)
@@ -561,9 +561,30 @@
     }
   };
 
+  const getDeviceName = (userSystemInfo) => {
+    if (userSystemInfo?.isMobile) {
+      if (userSystemInfo?.isAndroid) return "Android";
+      if (userSystemInfo?.isiPhone) return "iPhone";
+      if (userSystemInfo?.isiPad) return "iPad";
+      return "Mobile";
+    }
+  
+    if (userSystemInfo?.isTablet) {
+      return "Tablet";
+    }
+  
+    if (userSystemInfo?.isDesktop) {
+      if (userSystemInfo?.isWindows) return "Windows PC";
+      if (userSystemInfo?.isMac) return "Mac PC";
+      if (userSystemInfo?.isLinux) return "Linux PC";
+      return "Desktop";
+    }
+  
+    return userSystemInfo?.platform;
+  };
+  
   export const redirectUrl = async (req, res) => {
-    let userSystemInfo = req.headers["user-agent"];
-    userSystemInfo = useragent.parse(userSystemInfo);
+    let userSystemInfo = useragent.parse(req.headers["user-agent"]);
 
     const userIPAddress = requestIp.getClientIp(req);
 
@@ -572,6 +593,9 @@
     const shortLink = `${hostname}/${hash}`;
 
     try {
+
+      const userDevice = getDeviceName(userSystemInfo);
+      
       const Link = await UserLinks.findOne({ shortLink });
 
       if (!Link) {
@@ -581,13 +605,11 @@
       if (Link.expirationEnabled && new Date() > Link.expirationDate) {
         return res.status(404).json({ message: "URL has expired" });
       }
-
-      const osName = userSystemInfo.os;
-
+      
       Link.logs.push({
         timeStamp: new Date(),
         ipAddress: userIPAddress,
-        userDevice: osName,
+        userDevice
       });
 
       await Link.save();
