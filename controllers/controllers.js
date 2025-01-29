@@ -503,7 +503,7 @@
             userDevice: log.userDevice,
           };
         })
-      ).sort((a, b) => b.date - a.date);;
+      ).sort((a, b) => b.date - a.date);
   
       const count = logsData.length;
       
