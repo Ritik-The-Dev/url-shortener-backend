@@ -602,8 +602,13 @@
       });
 
       await Link.save();
-
-      res.redirect(Link.destinationUrl);
+      
+      let destinationUrl = Link.destinationUrl;
+      if (!/^https?:\/\//i.test(destinationUrl)) {
+        destinationUrl = `https://${destinationUrl}`;
+      }
+  
+      res.redirect(destinationUrl);
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
