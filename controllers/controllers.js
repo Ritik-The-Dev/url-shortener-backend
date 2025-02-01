@@ -414,6 +414,10 @@
         }
       }
 
+      if(!expirationEnabled){
+        userLink.expirationDate = null;
+      }
+
       await userLink.save();
 
       const query = {
