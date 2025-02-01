@@ -415,6 +415,7 @@
       }
 
       if(!expirationEnabled){
+        userLink.expirationEnabled = false;
         userLink.expirationDate = null;
       }
 
