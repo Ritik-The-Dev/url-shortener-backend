@@ -15,12 +15,13 @@
     const count = await UserLinks.find(query).countDocuments();
   
     const linksData = allLinks.map((link) => {
-      const status = link.expirationEnabled
-        ? link.expirationDate > new Date()
-          ? "Active"
-          : "Inactive"
-        : "Active";
-  
+
+    const expirationDateStr = link.expirationDate; 
+    const currentTimeUtc = new Date();
+    const currentTimeIST = new Date(currentTimeUtc.getTime() + (5.5 * 60 * 60 * 1000));
+    const expirationDateUtc = new Date(expirationDateStr);
+    const status = expirationDateUtc > currentTimeIST ? "Active" : "Inactive";
+
       return {
         _id: link._id,
         date: link.createdAt,
