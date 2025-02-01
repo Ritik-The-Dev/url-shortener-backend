@@ -24,6 +24,7 @@
       return {
         _id: link._id,
         date: link.createdAt,
+        expirationDate: link.expirationDate,
         expirationEnabled: link.expirationEnabled,
         destinationUrl: link.destinationUrl,
         shortLink: link.shortLink,
