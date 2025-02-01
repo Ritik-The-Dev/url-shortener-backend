@@ -593,8 +593,13 @@
         return res.status(404).json({ message: "Invalid URL / URL not found" });
       }
 
-      if (Link.expirationEnabled && new Date() > Link.expirationDate) {
-        return res.status(404).json({ message: "URL has expired" });
+      if (Link.expirationEnabled) {
+        const currentTimeUtc = new Date();
+        const currentTimeIST = new Date(currentTimeUtc.getTime() + (5.5 * 60 * 60 * 1000));
+        const expirationDateUtc = new Date(Link.expirationDate);
+        if (expirationDateUtc <= currentTimeIST) {
+          return res.status(404).json({ message: "URL has expired" });
+        }
       }
       
       Link.logs.push({
