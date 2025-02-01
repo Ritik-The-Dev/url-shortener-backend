@@ -16,11 +16,15 @@
   
     const linksData = allLinks.map((link) => {
 
-    const expirationDateStr = link.expirationDate; 
-    const currentTimeUtc = new Date();
-    const currentTimeIST = new Date(currentTimeUtc.getTime() + (5.5 * 60 * 60 * 1000));
-    const expirationDateUtc = new Date(expirationDateStr);
-    const status = expirationDateUtc > currentTimeIST ? "Active" : "Inactive";
+      let status = "Active";
+
+      if(link.expirationEnabled){
+        const expirationDateStr = link.expirationDate; 
+        const currentTimeUtc = new Date();
+        const currentTimeIST = new Date(currentTimeUtc.getTime() + (5.5 * 60 * 60 * 1000));
+        const expirationDateUtc = new Date(expirationDateStr);
+        status = expirationDateUtc > currentTimeIST ? "Active" : "Inactive";
+      }
 
       return {
         _id: link._id,
