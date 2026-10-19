@@ -1,41 +1,25 @@
 import express from "express";
-import authMiddleware from "../middleware/auth.js";
 import {
-  Login,
-  Register,
-  getUserData,
-  updateUser,
   getDashboardData,
   createLink,
   editLink,
   deleteLink,
   getLinks,
   getAnalytics,
-  deleteUser,
 } from "../controllers/controllers.js";
 
 const router = express.Router();
 
-router.post("/login", Login);
+router.get("/dashboard", getDashboardData);
 
-router.post("/register", Register);
+router.post("/create-link", createLink);
 
-router.get("/user", authMiddleware, getUserData);
+router.put("/edit-link", editLink);
 
-router.get("/dashboard", authMiddleware, getDashboardData);
+router.delete("/delete-link/:id", deleteLink);
 
-router.post("/create-link", authMiddleware, createLink);
+router.get("/links", getLinks);
 
-router.put("/edit-link", authMiddleware, editLink);
-
-router.delete("/delete-link/:id", authMiddleware, deleteLink);
-
-router.get("/links", authMiddleware, getLinks);
-
-router.get("/analytics", authMiddleware, getAnalytics);
-
-router.delete("/delete-user", authMiddleware, deleteUser);
-
-router.put("/updateUser", authMiddleware, updateUser);
+router.get("/analytics", getAnalytics);
 
 export default router;

@@ -20,11 +20,6 @@ const LinkLogsSchema = new mongoose.Schema(
 
 const LinksModel = new mongoose.Schema(
   {
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
     destinationUrl: {
       type: String,
       required: true,

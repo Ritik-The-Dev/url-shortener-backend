@@ -1,7 +1,4 @@
-  import bcrypt from "bcryptjs";
   import shortid from "shortid";
-  import jwt from "jsonwebtoken";
-  import User from "../modals/User.js";
   import UserLinks from "../modals/Links.js";
   import useragent from "express-useragent";
   import requestIp from "request-ip";
@@ -42,197 +39,14 @@
     return { linksData, count };
   };
 
-  export const Login = async (req, res) => {
-    const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ success: false, message: "Invalid data" });
-    }
-
-    try {
-      const user = await User.findOne({ email });
-
-      if (!user) {
-        return res.status(401).json({
-          success: false,
-          message: "Invalid email or password",
-        });
-      }
-
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
-      if (!isPasswordCorrect) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Invalid credentials." });
-      }
-
-      const token = jwt.sign(
-        { email: user.email, id: user._id },
-        process.env.JWT_SECRET,
-        { expiresIn: "30d" }
-      );
-
-      res.status(200).json({
-        token,
-        success: true,
-        message: "Login successful",
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-
-  export const Register = async (req, res) => {
-    const { name, email, password, number } = req.body;
-
-    if (!name || !email || !password || !number) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
-    }
-
-    if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Invalid email format" });
-    }
-
-    try {
-      const existingUser = await User.findOne({
-        $or: [{ email }, { number }],
-      });
-
-      if (existingUser) {
-        return res.status(400).json({
-          success: false,
-          message: "Email or phone number already registered",
-        });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 12);
-
-      await User.create({
-        username: name,
-        number,
-        email,
-        password: hashedPassword,
-      });
-
-      return res.status(201).json({
-        success: true,
-        message: "User Created Successfully",
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-
-  export const getUserData = async (req, res) => {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized Access" });
-    }
-
-    try {
-      const user = await User.findById(userId).select("-password");
-
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-
-      res.status(200).json({
-        data: user,
-        success: true,
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-
-  export const updateUser = async (req, res) => {
-    const { name, email, number } = req.body;
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized Access" });
-    }
-
-    try {
-      const user = await User.findById(userId);
-
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-
-      if (!name || !email || !number) {
-        return res
-          .status(401)
-          .json({
-            success: false,
-            message: "Name , Email and Number is Required",
-          });
-      }
-
-      if (email && email !== user.email) {
-        const emailExists = await User.findOne({ email });
-        if (emailExists) {
-          return res
-            .status(400)
-            .json({ success: false, message: "Email already in use" });
-        }
-        user.email = email;
-      }
-
-      if (number && number !== user.number) {
-        const numberExists = await User.findOne({ number });
-        if (numberExists) {
-          return res
-            .status(400)
-            .json({ success: false, message: "Phone number already in use" });
-        }
-        user.number = number;
-      }
-
-      if (name) {
-        user.username = name;
-      }
-
-      await user.save();
-
-      const { password, ...restData } = user.toObject();
-
-      return res.status(200).json({
-        success: true,
-        message: "User data updated successfully",
-        data: restData,
-      });
-    } catch (error) {
-      return res.status(500).json({ success: false, message: error.message });
-    }
-  };
 
   export const getDashboardData = async (req, res) => {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized Access" });
-    }
-
     try {
-      const Links = await UserLinks.find({ userId });
+      const Links = await UserLinks.find({});
 
       let totalClicks = 0;
+      let totalLinks = Links.length;
       const dateWiseClicks = {};
       const clickedDevices = {};
 
@@ -285,6 +99,7 @@
         success: true,
         data: {
           totalClicks,
+          totalLinks,
           dateWiseClicks: formattedDateWiseClicks,
           clickedDevices: formattedClickedDevices,
         },
@@ -295,14 +110,12 @@
   };
 
   export const getLinks = async (req, res) => {
-    const userId = req.user?.id;
     const { page, limit, remarks } = req.query;
 
     try {
       const skip = (page - 1) * limit;
 
       const query = {
-        userId,
         remarks: remarks ? { $regex: remarks, $options: "i" } : { $ne: null },
       };
 
@@ -319,7 +132,6 @@
   };
 
   export const createLink = async (req, res) => {
-    const userId = req.user?.id;
     const { destinationUrl, remarks, expirationEnabled, expirationDate } =
       req.body;
     try {
@@ -344,8 +156,7 @@
         }
       }
 
-      await UserLinks.create({
-        userId,
+      const newLink = await UserLinks.create({
         destinationUrl,
         shortLink: `${hostname}/${hash}`,
         remarks: remarks || "",
@@ -353,9 +164,7 @@
         expirationDate: expirationEnabled ? new Date(expirationDate) : null,
       });
 
-      const query = {
-        userId: userId,
-      }
+      const query = {}
 
       const { linksData, count } = await GetLink(query, 0, 10);
 
@@ -363,7 +172,11 @@
         success: true,
         message: "Link created successfully",
         data: linksData,
-        count
+        count,
+        createdLink: {
+          shortLink: newLink.shortLink,
+          destinationUrl: newLink.destinationUrl,
+        }
       });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -371,7 +184,6 @@
   };
 
   export const editLink = async (req, res) => {
-    const userId = req.user?.id;
     const { _id, destinationUrl, remarks, expirationEnabled, expirationDate } =
       req.body;
 
@@ -390,18 +202,11 @@
           .json({ success: false, message: "Link not found" });
       }
 
-      if (userLink.userId != userId) {
-        return res.status(403).json({
-          success: false,
-          message: "You are not authorized to edit this link",
-        });
-      }
-
       if (destinationUrl) {
         userLink.destinationUrl = destinationUrl;
       }
 
-      if (remarks) {
+      if (remarks !== undefined) {
         userLink.remarks = remarks;
       }
 
@@ -425,9 +230,7 @@
 
       await userLink.save();
 
-      const query = {
-        userId: userId,
-      }
+      const query = {}
 
       const { linksData, count } = await GetLink(query, 0, 10);
 
@@ -443,7 +246,6 @@
   };
 
   export const deleteLink = async (req, res) => {
-    const userId = req.user?.id;
     const { id } = req.params;
 
     try {
@@ -461,18 +263,9 @@
           .json({ success: false, message: "Link not found" });
       }
 
-      if (userLink.userId != userId) {
-        return res.status(403).json({
-          success: false,
-          message: "You are not authorized to delete this link",
-        });
-      }
-
       await UserLinks.findByIdAndDelete(id);
 
-      const query = {
-        userId: userId,
-      }
+      const query = {}
 
       const { linksData, count } = await GetLink(query, 0, 10);
 
@@ -488,14 +281,12 @@
   };
 
   export const getAnalytics = async (req, res) => {
-    const userId = req.user?.id;
     const { page = 1, limit = 10, remarks } = req.query;
   
     try {
       const skip = (page - 1) * limit;
   
       const query = {
-        userId,
         ...(remarks
           ? { remarks: { $regex: remarks, $options: "i" } }
           : { remarks: { $ne: null } }),
@@ -530,38 +321,7 @@
     }
   };
 
-  export const deleteUser = async (req, res) => {
-    const userId = req.user?.id;
-
-    if (!userId) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Unauthorized Access" });
-    }
-
-    try {
-      const user = await User.findById(userId);
-
-      if (!user) {
-        return res
-          .status(404)
-          .json({ success: false, message: "User not found" });
-      }
-
-      await UserLinks.deleteMany({ userId });
-
-      await User.findByIdAndDelete(userId);
-
-      res.status(200).json({
-        message: "User and associated links deleted successfully",
-        success: true,
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  };
-
-  const getDeviceName = (userSystemInfo) => {
+const getDeviceName = (userSystemInfo) => {
     if (userSystemInfo?.isMobile) {
       if (userSystemInfo?.isAndroid) return "Android";
       if (userSystemInfo?.isiPhone) return "iPhone";
